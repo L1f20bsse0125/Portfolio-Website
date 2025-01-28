@@ -1,19 +1,39 @@
-name: Linting Pipeline
+name: Deploy static Portfolio Website
 
-steps:
-  - name: Checkout Code
-    uses: actions/checkout@v3
+on:
+  # Runs on pushes targeting the default branch develop
+  push:
+    branches: ["develop"]
 
-  - name: Set up Node.js
-    uses: actions/setup-node@v3
-    with:
-      node-version: "16"
+  workflow_dispatch:
 
-  - name: Install Dependencies
-    run: npm install htmlhint stylelint --save-dev
+# Sets permissions 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
-  - name: Run HTML Lint
-    run: npx htmlhint src/**/*.html
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
 
-  - name: Run CSS Lint
-    run: npx stylelint "styles/**/*.css"
+jobs:
+ 
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Upload entire repository
+          path: '.'
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
